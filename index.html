@@ -267,7 +267,7 @@
             <img src="https://cdn0.iconfinder.com/data/icons/minimal-set-seven/32/minimal-47-256.png" alt="Fuel">
         </div>
         <div class="top-icon" id="healthIcon">
-            <img src="https://cdn4.iconfinder.com/data/icons/tabler-vol-3/24/engine-265.png" alt="Engine/Health">
+            <img src="https://cdn4.iconfinder.com/data/icons/tabler-vol-3/24/engine-256.png" alt="Engine/Health">
         </div>
     </div>
     
@@ -286,6 +286,10 @@
     let targetRPM = 0;
     const RPM_SMOOTHNESS = 0.12;
     let speedMode = 1;
+    
+    // ================== VARIABEL BARU UNTUK FIX GEAR ==================
+    let rawSpeedInMetersPerSecond = 0;
+    // ===============================================================
 
     function initializeUI() {
         elements = {
@@ -387,7 +391,11 @@
         elements.healthIcon.classList.toggle('engine-on', state);
     }
 
+    // ================== FUNGSI SPEED DIPERBAIKI ==================
     function setSpeed(speed) {
+        // Simpan kecepatan mentah dari game ke variabel global
+        rawSpeedInMetersPerSecond = speed;
+
         let convertedSpeed = 0;
         let unit = 'KMH';
         switch(speedMode) {
@@ -406,6 +414,7 @@
         elements.speedValue.innerText = convertedSpeed;
         elements.speedUnit.innerText = unit;
     }
+    // ==========================================================
 
     function setRPM(rpm) {
         targetRPM = Math.max(0, Math.min(1, rpm));
@@ -423,27 +432,35 @@
         elements.engineProgress.style.strokeDashoffset = offset;
     }
 
-    // ================== FUNGSI GEAR DIPERBAIKI ==================
+    // ================== FUNGSI GEAR DIPERBAIKI (FINAL) ==================
     function setGear(gear) {
         let displayGear;
-        let currentSpeed = parseInt(elements.speedValue.innerText);
+
+        // Gunakan variabel global yang andal untuk memeriksa kecepatan.
+        // Threshold 0.1 m/s (~0.2 MPH) untuk memastikan mobil benar-benar bergerak.
+        const isMoving = rawSpeedInMetersPerSecond > 0.1;
 
         if (gear === 0) {
-            displayGear = 'R'; // Mundur
-        } else if (gear === 1 && currentSpeed < 1) {
-            // Tampilkan 'N' HANYA jika mobil benar-benar diam.
-            displayGear = 'N';
+            displayGear = 'R';
+        } else if (gear === 1) {
+            // Jika RAGE bilang netral...
+            if (isMoving) {
+                // ...tapi mobil bergerak maju, paksa tampilkan gigi 1. INI FIX-NYA.
+                displayGear = 1;
+            } else {
+                // ...dan mobil diam, maka itu benar-benar netral.
+                displayGear = 'N';
+            }
         } else if (gear >= 2) {
-            // Gear 2 dari RAGEMP adalah gigi 1, dst.
+            // Jika RAGE bilang gigi 2 atau lebih, kurangi 1 untuk tampilan.
             displayGear = gear - 1;
         } else {
-            // Ini mencakup kasus gear 1 dari RAGEMP saat mobil sudah bergerak (speed >= 1)
-            // yang kita anggap sebagai gigi 1.
-            displayGear = 1;
+            // Fallback default
+            displayGear = 'N';
         }
         elements.gearValue.innerText = displayGear;
     }
-    // ==========================================================
+    // ==================================================================
 
     function setHeadlights(state) {
         const on = state > 0;

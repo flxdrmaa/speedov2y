@@ -89,7 +89,8 @@
         stroke-width: 10;
         stroke-linecap: round;
         filter: drop-shadow(0 0 8px #ffffff);
-        transition: stroke-dashoffset 0.1s linear;
+        /* Hapus transisi agar getaran idle terlihat instan */
+        /* transition: stroke-dashoffset 0.1s linear; */
     }
 
     .scale-marks { position: absolute; width: 100%; height: 100%; pointer-events: none; }
@@ -287,12 +288,12 @@
     let targetRPM = 0;
     let speedMode = 1;
     let rawSpeedInMetersPerSecond = 0;
-    let isEngineOn = false; // <-- Variabel baru untuk status mesin
+    let isEngineOn = false;
 
     // Pengaturan untuk animasi idle
     const RPM_SMOOTHNESS = 0.12;
-    const IDLE_FLUCTUATION_AMOUNT = 0.01; // Seberapa besar getarannya (0.01 = 100 RPM)
-    const IDLE_FLUCTUATION_SPEED = 0.004;  // Seberapa cepat getarannya
+    const IDLE_FLUCTUATION_AMOUNT = 0.008; // Dikecilkan sedikit agar lebih natural (80 RPM)
+    const IDLE_FLUCTUATION_SPEED = 0.005;
 
     function initializeUI() {
         elements = {
@@ -379,35 +380,37 @@
         }
     }
 
-    // ================== FUNGSI ANIMASI RPM DIPERBARUI ==================
+    // ================== FUNGSI ANIMASI RPM DIPERBARUI (FINAL) ==================
     function updateRPMAnimation() {
-        let finalTargetRPM = targetRPM;
+        // 1. Selalu haluskan pergerakan RPM menuju target dari game.
+        currentRPM += (targetRPM - currentRPM) * RPM_SMOOTHNESS;
 
-        // Cek kondisi untuk animasi idle
+        // 2. Tentukan RPM yang akan ditampilkan. Defaultnya adalah RPM yang sudah dihaluskan.
+        let displayRPM = currentRPM;
+
+        // 3. Cek kondisi untuk animasi idle.
         const isIdle = isEngineOn && rawSpeedInMetersPerSecond < 0.1 && targetRPM < 0.15;
         if (isIdle) {
-            // Buat getaran menggunakan sinusoida berbasis waktu
+            // 4. Jika idle, tambahkan getaran ke nilai RPM yang sudah dihaluskan.
             const idleFluctuation = Math.sin(Date.now() * IDLE_FLUCTUATION_SPEED) * IDLE_FLUCTUATION_AMOUNT;
-            // Tambahkan getaran ke RPM idle dari game
-            finalTargetRPM = targetRPM + idleFluctuation;
+            displayRPM += idleFluctuation;
         }
-
-        // Animasikan menuju target (baik itu target game atau target idle yang bergetar)
-        currentRPM += (finalTargetRPM - currentRPM) * RPM_SMOOTHNESS;
         
+        // 5. Pastikan nilai tidak keluar batas (0-1) dan gambar bar RPM.
+        displayRPM = Math.max(0, Math.min(1, displayRPM));
         if (elements.rpmSolidBar) {
-            const offset = elements.rpmFullLength * (1 - currentRPM);
+            const offset = elements.rpmFullLength * (1 - displayRPM);
             elements.rpmSolidBar.style.strokeDashoffset = offset;
         }
         
         requestAnimationFrame(updateRPMAnimation);
     }
-    // =================================================================
+    // =========================================================================
 
     // --- RAGEMP API FUNCTIONS ---
 
     function setEngine(state) {
-        isEngineOn = state; // <-- Update variabel status mesin
+        isEngineOn = state;
         elements.healthIcon.classList.toggle('engine-on', state);
     }
 

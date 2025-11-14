@@ -19,15 +19,17 @@
         margin: 0;
     }
 
+    /* ================== PERUBAHAN DI SINI ================== */
     .widget-wrapper {
         position: fixed;
-        bottom: 12px;
-        right: 12px;
+        bottom: 15px; /* Sedikit dinaikkan agar seimbang */
+        right: 40px;  /* Digeser lebih ke kiri (nilai lebih besar) */
         width: 240px;
         height: 240px;
-        transform: scale(0.75) translateX(-20px);
+        transform: scale(0.85); /* Ukuran diperbesar dari 0.75 */
         transform-origin: bottom right;
     }
+    /* ======================================================= */
 
     .speedometer, .side-gauges, .rpm-bars {
         position: absolute;
@@ -230,19 +232,16 @@
  </div>
 
  <script>
-    // === JAVASCRIPT GABUNGAN (LOGIKA VISUAL + API RAGEMP) ===
-
     let elements = {};
     const SIZE = 240;
     const CENTER = SIZE / 2;
     const RPM_RADIUS = 114;
     const NUMBER_RADIUS = 84;
 
-    // State variables
     let currentRPM = 0;
     let targetRPM = 0;
     const RPM_SMOOTHNESS = 0.12;
-    let speedMode = 1; // 0: KMH, 1: MPH, 2: Knots
+    let speedMode = 1;
 
     function initializeUI() {
         elements = {
@@ -289,7 +288,6 @@
         };
 
         const pathData = describeArc(CENTER, CENTER, RPM_RADIUS, startAngle, endAngle);
-
         const track = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         track.setAttribute('d', pathData);
         track.setAttribute('class', 'rpm-track');
@@ -349,15 +347,15 @@
         let convertedSpeed = 0;
         let unit = 'KMH';
         switch(speedMode) {
-            case 1: // MPH
+            case 1:
                 convertedSpeed = Math.round(speed * 2.236936);
                 unit = 'MPH';
                 break;
-            case 2: // Knots
+            case 2:
                 convertedSpeed = Math.round(speed * 1.943844);
                 unit = 'Knots';
                 break;
-            default: // KMH
+            default:
                 convertedSpeed = Math.round(speed * 3.6);
                 unit = 'KMH';
         }
@@ -371,25 +369,26 @@
 
     function setFuel(fuel) {
         const offset = elements.fuelArcLength * (1 - fuel);
-        elements.fuelProgress.style.strokeDashoffset = offset;
         elements.fuelProgress.className = `arc-progress ${fuel < 0.2 ? 'red' : fuel < 0.5 ? 'yellow' : 'white'}`;
+        elements.fuelProgress.style.strokeDashoffset = offset;
     }
 
     function setHealth(health) {
         const offset = elements.engineArcLength * (1 - health);
-        elements.engineProgress.style.strokeDashoffset = offset;
         elements.engineProgress.className = `arc-progress ${health < 0.2 ? 'red' : health < 0.5 ? 'yellow' : 'white'}`;
+        elements.engineProgress.style.strokeDashoffset = offset;
     }
 
     function setGear(gear) {
-        // RAGEMP Standard: 0=R, 1=N, 2=1st, 3=2nd ...
         let displayGear;
         if (gear === 0) {
             displayGear = 'R';
-        } else if (gear === 1) {
+        } else if (gear === 1 && parseInt(elements.speedValue.innerText) < 5) {
             displayGear = 'N';
-        } else {
+        } else if (gear >= 2) {
             displayGear = gear - 1;
+        } else {
+            displayGear = 1;
         }
         elements.gearValue.innerText = displayGear;
     }

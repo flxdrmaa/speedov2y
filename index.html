@@ -290,8 +290,8 @@
 
     // Pengaturan untuk animasi idle
     const RPM_SMOOTHNESS = 0.12;
-    const IDLE_FLUCTUATION_AMOUNT = 0.012; // Getaran dibuat sedikit lebih terlihat (120 RPM)
-    const IDLE_FLUCTUATION_SPEED = 0.005;
+    const IDLE_FLUCTUATION_AMOUNT = 0.015; // Getaran ±150 RPM
+    const IDLE_FLUCTUATION_SPEED = 0.006;  // Kecepatan getaran
 
     function initializeUI() {
         elements = {
@@ -378,26 +378,31 @@
         }
     }
 
-    // ================== FUNGSI ANIMASI RPM DIPERBARUI (FINAL V2) ==================
+    // ================== FUNGSI ANIMASI RPM DIPERBARUI (FINAL V3) ==================
     function updateRPMAnimation() {
-        // Tentukan target RPM untuk frame ini
-        let dynamicTarget = targetRPM;
-
+        let finalRPMToShow;
+        
         // Cek kondisi untuk animasi idle
         const isIdle = isEngineOn && rawSpeedInMetersPerSecond < 0.1 && targetRPM < 0.15;
+
         if (isIdle) {
-            // Jika idle, buat targetnya bergetar di sekitar nilai idle dari game
+            // JIKA IDLE: Buat getaran di sekitar nilai idle dari game.
+            // Smoothing diabaikan agar animasi terlihat jelas.
             const idleFluctuation = Math.sin(Date.now() * IDLE_FLUCTUATION_SPEED) * IDLE_FLUCTUATION_AMOUNT;
-            dynamicTarget = targetRPM + idleFluctuation;
+            finalRPMToShow = targetRPM + idleFluctuation;
+
+            // Penting: Update 'currentRPM' agar transisi keluar dari idle tetap mulus.
+            currentRPM = finalRPMToShow;
+        } else {
+            // JIKA TIDAK IDLE: Gunakan logika smoothing seperti biasa.
+            currentRPM += (targetRPM - currentRPM) * RPM_SMOOTHNESS;
+            finalRPMToShow = currentRPM;
         }
         
-        // Sekarang, haluskan pergerakan `currentRPM` menuju target yang dinamis tersebut
-        currentRPM += (dynamicTarget - currentRPM) * RPM_SMOOTHNESS;
-
-        // Pastikan nilai tidak keluar batas (0-1) sebelum menggambar
-        const displayRPM = Math.max(0, Math.min(1, currentRPM));
+        // Pastikan nilai tidak keluar batas (0-1) sebelum menggambar bar.
+        finalRPMToShow = Math.max(0, Math.min(1, finalRPMToShow));
         if (elements.rpmSolidBar) {
-            const offset = elements.rpmFullLength * (1 - displayRPM);
+            const offset = elements.rpmFullLength * (1 - finalRPMToShow);
             elements.rpmSolidBar.style.strokeDashoffset = offset;
         }
         

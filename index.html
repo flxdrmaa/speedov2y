@@ -282,14 +282,17 @@
     const RPM_RADIUS = 114;
     const NUMBER_RADIUS = 84;
 
+    // Variabel state
     let currentRPM = 0;
     let targetRPM = 0;
-    const RPM_SMOOTHNESS = 0.12;
     let speedMode = 1;
-    
-    // ================== VARIABEL BARU UNTUK FIX GEAR ==================
     let rawSpeedInMetersPerSecond = 0;
-    // ===============================================================
+    let isEngineOn = false; // <-- Variabel baru untuk status mesin
+
+    // Pengaturan untuk animasi idle
+    const RPM_SMOOTHNESS = 0.12;
+    const IDLE_FLUCTUATION_AMOUNT = 0.01; // Seberapa besar getarannya (0.01 = 100 RPM)
+    const IDLE_FLUCTUATION_SPEED = 0.004;  // Seberapa cepat getarannya
 
     function initializeUI() {
         elements = {
@@ -376,26 +379,40 @@
         }
     }
 
+    // ================== FUNGSI ANIMASI RPM DIPERBARUI ==================
     function updateRPMAnimation() {
-        currentRPM += (targetRPM - currentRPM) * RPM_SMOOTHNESS;
+        let finalTargetRPM = targetRPM;
+
+        // Cek kondisi untuk animasi idle
+        const isIdle = isEngineOn && rawSpeedInMetersPerSecond < 0.1 && targetRPM < 0.15;
+        if (isIdle) {
+            // Buat getaran menggunakan sinusoida berbasis waktu
+            const idleFluctuation = Math.sin(Date.now() * IDLE_FLUCTUATION_SPEED) * IDLE_FLUCTUATION_AMOUNT;
+            // Tambahkan getaran ke RPM idle dari game
+            finalTargetRPM = targetRPM + idleFluctuation;
+        }
+
+        // Animasikan menuju target (baik itu target game atau target idle yang bergetar)
+        currentRPM += (finalTargetRPM - currentRPM) * RPM_SMOOTHNESS;
+        
         if (elements.rpmSolidBar) {
             const offset = elements.rpmFullLength * (1 - currentRPM);
             elements.rpmSolidBar.style.strokeDashoffset = offset;
         }
+        
         requestAnimationFrame(updateRPMAnimation);
     }
+    // =================================================================
 
     // --- RAGEMP API FUNCTIONS ---
 
     function setEngine(state) {
+        isEngineOn = state; // <-- Update variabel status mesin
         elements.healthIcon.classList.toggle('engine-on', state);
     }
 
-    // ================== FUNGSI SPEED DIPERBAIKI ==================
     function setSpeed(speed) {
-        // Simpan kecepatan mentah dari game ke variabel global
         rawSpeedInMetersPerSecond = speed;
-
         let convertedSpeed = 0;
         let unit = 'KMH';
         switch(speedMode) {
@@ -414,7 +431,6 @@
         elements.speedValue.innerText = convertedSpeed;
         elements.speedUnit.innerText = unit;
     }
-    // ==========================================================
 
     function setRPM(rpm) {
         targetRPM = Math.max(0, Math.min(1, rpm));
@@ -432,35 +448,24 @@
         elements.engineProgress.style.strokeDashoffset = offset;
     }
 
-    // ================== FUNGSI GEAR DIPERBAIKI (FINAL) ==================
     function setGear(gear) {
         let displayGear;
-
-        // Gunakan variabel global yang andal untuk memeriksa kecepatan.
-        // Threshold 0.1 m/s (~0.2 MPH) untuk memastikan mobil benar-benar bergerak.
         const isMoving = rawSpeedInMetersPerSecond > 0.1;
-
         if (gear === 0) {
             displayGear = 'R';
         } else if (gear === 1) {
-            // Jika RAGE bilang netral...
             if (isMoving) {
-                // ...tapi mobil bergerak maju, paksa tampilkan gigi 1. INI FIX-NYA.
                 displayGear = 1;
             } else {
-                // ...dan mobil diam, maka itu benar-benar netral.
                 displayGear = 'N';
             }
         } else if (gear >= 2) {
-            // Jika RAGE bilang gigi 2 atau lebih, kurangi 1 untuk tampilan.
             displayGear = gear - 1;
         } else {
-            // Fallback default
             displayGear = 'N';
         }
         elements.gearValue.innerText = displayGear;
     }
-    // ==================================================================
 
     function setHeadlights(state) {
         const on = state > 0;

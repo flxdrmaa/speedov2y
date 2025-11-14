@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAGEMP Speedometer</title>
+    <style>
+        * {
+            user-select: none;
+            user-drag: none;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: transparent !important;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        /* --- Wrapper Utama --- */
+        .widget-wrapper {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            width: 320px;
+            height: 320px;
+        }
+
+        /* Semua lapisan absolut untuk stacking */
+        .rpm-bg-bars, .rpm-gauge, .speedometer, .side-gauges {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* LAPISAN 0: RPM Background Bars (10 Segmen) */
+        .rpm-bg-bars {
+            z-index: 0;
+        }
+        .rpm-bar {
+            fill: none;
+            stroke-width: 18;
+            stroke-linecap: round;
+            stroke: #1e3a5f;
+            transition: stroke 0.3s ease;
+        }
+        .rpm-bar.active {
+            stroke: #60a5fa;
+            filter: drop-shadow(0 0 6px #60a5fa);
+        }
+        .rpm-bar.danger {
+            stroke: #ef4444;
+            filter: drop-shadow(0 0 8px #ef4444);
+        }
+
+        /* LAPISAN 1: RPM Gauge (Progress Bar) */
+        .rpm-gauge {
+            z-index: 1;
+        }
+        .rpm-progress {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s linear, stroke 0.2s ease;
+        }
+        .rpm-progress.normal {
+            stroke: #60a5fa;
+            filter: drop-shadow(0 0 4px #60a5fa);
+        }
+        .rpm-progress.danger {
+            stroke: #ef4444;
+            filter: drop-shadow(0 0 6px #ef4444);
+        }
+
+        /* LAPISAN 2: Speedometer Utama */
+        .speedometer {
+            background: radial-gradient(circle, #1e3a5f 0%, #0a1929 100%);
+            border-radius: 50%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7),
+                        inset 0 0 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+        .scale-marks {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        .scale-mark {
+            position: absolute; width: 2px; height: 12px; background: #475569;
+            left: 50%; top: 15px; transform-origin: 50% 145px;
+        }
+        .scale-mark.major { height: 18px; width: 3px; background: #64748b; }
+        .scale-number {
+            position: absolute; color: #94a3b8; font-size: 14px;
+            font-weight: 600; transform: translate(-50%, -50%);
+        }
+        .speed-display { text-align: center; }
+        .speed-value {
+            font-size: 80px; font-weight: bold; color: white;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            line-height: 1; margin-bottom: 5px;
+        }
+        .speed-unit { font-size: 16px; color: #94a3b8; letter-spacing: 2px; font-weight: 600; }
+        .gear-display {
+            position: absolute; top: 130px; right: 90px; font-size: 32px;
+            color: white; font-weight: bold; text-shadow: 0 0 10px rgba(255,255,255,0.4);
+        }
+        .odometer {
+            position: absolute; bottom: 70px; background: rgba(0, 0, 0, 0.4);
+            padding: 6px 14px; border-radius: 20px; font-size: 13px; color: #94a3b8;
+        }
+
+        /* LAPISAN 3: Fuel & Health */
+        .side-gauges {
+            z-index: 3;
+        }
+        .arc-gauge {
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            top: 0;
+            left: -35px;
+        }
+        #engineGauge { left: auto; right: -35px; }
+        .arc-gauge path { fill: none; stroke-width: 16; stroke-linecap: round; }
+        .arc-gauge .arc-track { stroke: #374151; }
+        .arc-gauge .arc-progress { transition: stroke-dashoffset 0.3s ease-out, stroke 0.3s ease; }
+        .arc-progress.white { stroke: #e2e8f0; }
+        .arc-progress.yellow { stroke: #fbbf24; }
+        .arc-progress.red { stroke: #ef4444; animation: warning-pulse 1s ease-in-out infinite; }
+        @keyframes warning-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .top-icons {
+            position: absolute; top: 15px; width: 100%; display: flex;
+            justify-content: space-between; padding: 0 20px; font-size: 28px;
+        }
+        .bottom-icons {
+            position: absolute; bottom: 95px; display: flex; gap: 12px; font-size: 20px;
+        }
+        .indicator-icon {
+            opacity: 0.2; transition: opacity 0.3s, color 0.3s;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+        }
+        .top-icons .indicator-icon { opacity: 1; }
+        .indicator-icon.on { opacity: 1; }
+        .engine-status-icon.on { color: #34d399; }
+        .engine-status-icon.off { opacity: 0.2; }
+        .seatbelt-icon.on { opacity: 0.2; }
+        .seatbelt-icon.off { color: #ef4444; opacity: 1; }
+        .headlights-icon.on { color: #fde047; }
+        .headlights-icon.high-beam { color: #fde047; text-shadow: 0 0 15px #fde047; }
+        .left-indicator, .right-indicator { color: #f59e0b; }
+        @keyframes blink { 50% { opacity: 1; } }
+        .blinking { animation: blink 1s step-end infinite; }
+    </style>
+</head>
+<body>
+    <div class="widget-wrapper">
+
+        <!-- LAPISAN 0: RPM Background Bars (10 Segmen) -->
+        <svg class="rpm-bg-bars" viewBox="0 0 320 320" id="rpmBgBars">
+            <!-- Akan di-generate via JS -->
+        </svg>
+
+        <!-- LAPISAN 1: BAR RPM (Progress) -->
+        <svg class="rpm-gauge" viewBox="0 0 320 320">
+            <path class="rpm-progress normal" id="rpmProgress" d="M 57.5, 262.5 A 145,145 0 1 1 262.5, 262.5"/>
+        </svg>
+
+        <!-- LAPISAN 2: Speedometer Utama -->
+        <div class="speedometer">
+            <div class="scale-marks" id="scaleMarks"></div>
+            <div class="speed-display">
+                <div class="speed-value" id="speedValue">0</div>
+                <div class="speed-unit" id="speedUnit">KMH</div>
+            </div>
+            <div class="odometer" id="rpmDisplay">0.0000 RPM</div>
+            <div class="gear-display" id="gearValue">N</div>
+            <div class="bottom-icons">
+                <div class="indicator-icon engine-status-icon" id="engineStatusIcon">🔥</div>
+                <div class="indicator-icon seatbelt-icon" id="seatbeltIcon">🚫</div>
+                <div class="indicator-icon headlights-icon" id="headlightsIcon">💡</div>
+                <div class="indicator-icon left-indicator" id="leftIndicator">◀</div>
+                <div class="indicator-icon right-indicator" id="rightIndicator">▶</div>
+            </div>
+        </div>
+
+        <!-- LAPISAN 3: Fuel & Health -->
+        <div class="side-gauges">
+            <svg class="arc-gauge" id="fuelGauge" viewBox="0 0 320 320">
+                <path class="arc-track" d="M 55,275 A 165,165 0 0 1 55,45"/>
+                <path class="arc-progress white" id="fuelProgress" d="M 55,275 A 165,165 0 0 1 55,45"/>
+            </svg>
+            <svg class="arc-gauge" id="engineGauge" viewBox="0 0 320 320">
+                <path class="arc-track" d="M 265,45 A 165,165 0 0 1 265,275"/>
+                <path class="arc-progress white" id="engineProgress" d="M 265,45 A 165,165 0 0 1 265,275"/>
+            </svg>
+            <div class="top-icons">
+                <div class="indicator-icon" id="fuelIcon">⛽</div>
+                <div class="indicator-icon" id="healthIcon">🔧</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let elements = {};
+
+        function initializeUI() {
+            elements = {
+                speedValue: document.getElementById('speedValue'),
+                speedUnit: document.getElementById('speedUnit'),
+                rpmDisplay: document.getElementById('rpmDisplay'),
+                gearValue: document.getElementById('gearValue'),
+                fuelProgress: document.getElementById('fuelProgress'),
+                engineProgress: document.getElementById('engineProgress'),
+                rpmProgress: document.getElementById('rpmProgress'),
+                engineStatusIcon: document.getElementById('engineStatusIcon'),
+                seatbeltIcon: document.getElementById('seatbeltIcon'),
+                headlightsIcon: document.getElementById('headlightsIcon'),
+                leftIndicator: document.getElementById('leftIndicator'),
+                rightIndicator: document.getElementById('rightIndicator'),
+                rpmBgBars: document.getElementById('rpmBgBars')
+            };
+
+            // Inisialisasi arc length
+            elements.fuelArcLength = elements.fuelProgress.getTotalLength();
+            elements.engineArcLength = elements.engineProgress.getTotalLength();
+            elements.rpmArcLength = elements.rpmProgress.getTotalLength();
+            elements.fuelProgress.style.strokeDasharray = elements.fuelArcLength;
+            elements.engineProgress.style.strokeDasharray = elements.engineArcLength;
+            elements.rpmProgress.style.strokeDasharray = elements.rpmArcLength;
+            elements.rpmProgress.style.strokeDashoffset = elements.rpmArcLength;
+
+            // Generate 10 RPM Background Bars
+            generateRPMBars();
+
+            // Generate speedometer scale
+            generateScaleMarks();
+        }
+
+        function generateRPMBars() {
+            const svg = elements.rpmBgBars;
+            const centerX = 160, centerY = 160;
+            const radius = 152;
+            const startAngle = -135;
+            const sweepAngle = 270;
+            const segmentCount = 10;
+            const anglePerSegment = sweepAngle / segmentCount;
+
+            for (let i = 0; i < segmentCount; i++) {
+                const angle1 = startAngle + i * anglePerSegment;
+                const angle2 = startAngle + (i + 1) * anglePerSegment;
+
+                const rad1 = (angle1 - 90) * Math.PI / 180;
+                const rad2 = (angle2 - 90) * Math.PI / 180;
+
+                const x1 = centerX + radius * Math.cos(rad1);
+                const y1 = centerY + radius * Math.sin(rad1);
+                const x2 = centerX + radius * Math.cos(rad2);
+                const y2 = centerY + radius * Math.sin(rad2);
+
+                const largeArc = anglePerSegment > 180 ? 1 : 0;
+
+                const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', pathData);
+                path.setAttribute('class', 'rpm-bar');
+                path.setAttribute('id', `rpmBar${i + 1}`);
+                svg.appendChild(path);
+            }
+        }
+
+        function generateScaleMarks() {
+            const scaleMarks = document.getElementById('scaleMarks');
+            const totalMarks = 10, startAngle = -135, sweepAngle = 270, numberRadius = 112;
+            const centerX = 160, centerY = 160;
+
+            for (let i = 0; i < totalMarks; i++) {
+                const angleDeg = startAngle + (i * sweepAngle / (totalMarks - 1));
+                const mark = document.createElement('div');
+                mark.className = 'scale-mark major';
+                mark.style.transform = `translateX(-50%) rotate(${angleDeg}deg)`;
+                scaleMarks.appendChild(mark);
+
+                const number = document.createElement('div');
+                number.className = 'scale-number';
+                number.textContent = i + 1;
+                const angleRad = (angleDeg - 90) * Math.PI / 180;
+                const x = centerX + numberRadius * Math.cos(angleRad);
+                const y = centerY + numberRadius * Math.sin(angleRad);
+                number.style.left = `${x}px`;
+                number.style.top = `${y}px`;
+                scaleMarks.appendChild(number);
+            }
+        }
+
+        function setArcValue(arcElement, arcLength, percentage) {
+            const offset = arcLength * (1 - percentage / 100);
+            arcElement.style.strokeDashoffset = offset;
+        }
+
+        function setRPM(rpm) {
+            elements.rpmDisplay.innerText = `${rpm.toFixed(4)} RPM`;
+            const offset = elements.rpmArcLength * (1 - rpm);
+            elements.rpmProgress.style.strokeDashoffset = offset;
+
+            const rpmPercent = rpm * 100;
+            const activeSegments = Math.floor(rpm * 10);
+            const isDanger = rpm > 0.8;
+
+            // Update background bars
+            for (let i = 1; i <= 10; i++) {
+                const bar = document.getElementById(`rpmBar${i}`);
+                bar.classList.remove('active', 'danger');
+                if (i <= activeSegments) {
+                    bar.classList.add('active');
+                    if (isDanger && i > 7) {
+                        bar.classList.add('danger');
+                    }
+                }
+            }
+
+            // Update progress bar color
+            elements.rpmProgress.className = isDanger ? 'rpm-progress danger' : 'rpm-progress normal';
+        }
+
+        function setSpeed(speed) {
+            const kmh = Math.round(speed * 3.6);
+            elements.speedValue.innerText = kmh;
+        }
+
+        function setFuel(fuel) {
+            const fuelPercent = fuel * 100;
+            setArcValue(elements.fuelProgress, elements.fuelArcLength, fuelPercent);
+            if (fuelPercent < 20) elements.fuelProgress.className = 'arc-progress red';
+            else if (fuelPercent < 50) elements.fuelProgress.className = 'arc-progress yellow';
+            else elements.fuelProgress.className = 'arc-progress white';
+        }
+
+        function setHealth(health) {
+            const healthPercent = health * 100;
+            setArcValue(elements.engineProgress, elements.engineArcLength, healthPercent);
+            if (healthPercent < 20) elements.engineProgress.className = 'arc-progress red';
+            else if (healthPercent < 50) elements.engineProgress.className = 'arc-progress yellow';
+            else elements.engineProgress.className = 'arc-progress white';
+        }
+
+        function setGear(gear) {
+            elements.gearValue.innerText = (gear === 0) ? 'N' : String(gear);
+        }
+
+        function setEngine(state) {
+            elements.engineStatusIcon.classList.toggle('on', state);
+            elements.engineStatusIcon.classList.toggle('off', !state);
+        }
+
+        function setHeadlights(state) {
+            elements.headlightsIcon.classList.remove('on', 'high-beam');
+            if (state === 1) elements.headlightsIcon.classList.add('on');
+            else if (state === 2) elements.headlightsIcon.classList.add('high-beam');
+        }
+
+        function setLeftIndicator(state) {
+            elements.leftIndicator.classList.toggle('blinking', state);
+        }
+
+        function setRightIndicator(state) {
+            elements.rightIndicator.classList.toggle('blinking', state);
+        }
+
+        function setSeatbelts(state) {
+            elements.seatbeltIcon.classList.toggle('on', !state);
+            elements.seatbeltIcon.classList.toggle('off', state);
+        }
+
+        // Inisialisasi saat DOM siap
+        document.addEventListener('DOMContentLoaded', initializeUI);
+
+        // Contoh penggunaan (untuk testing)
+        // setTimeout(() => setRPM(0.75), 1000);
+        // setTimeout(() => setRPM(0.92), 3000);
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAGEMP Speedometer</title>
+    <title>RAGEMP Speedometer (Smaller + Fixed Health)</title>
     <style>
         * {
             user-select: none;
@@ -17,12 +17,15 @@
             margin: 0;
         }
 
+        /* UKURAN LEBIH KECIL: 240px */
         .widget-wrapper {
             position: fixed;
-            bottom: 15px;
-            right: 15px;
-            width: 320px;
-            height: 320px;
+            bottom: 12px;
+            right: 12px;
+            width: 240px;
+            height: 240px;
+            transform: scale(0.75); /* 75% dari ukuran asli */
+            transform-origin: bottom right;
         }
 
         .speedometer, .side-gauges, .rpm-bars {
@@ -37,7 +40,7 @@
         .speedometer {
             background: radial-gradient(circle, #1e3a5f 0%, #0a1929 100%);
             border-radius: 50%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.7), inset 0 0 40px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7), inset 0 0 30px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -45,103 +48,130 @@
             z-index: 1;
         }
 
-        /* GEAR BULATAN BIRU - SANGAT KECIL & DI ATAS KMH */
+        /* GEAR KECIL ATAS */
         .gear-container {
             position: absolute;
-            top: 70px; /* NAIK LEBIH ATAS */
+            top: 52px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 2;
         }
         .gear-circle {
-            width: 32px;    /* SANGAT KECIL */
-            height: 32px;   /* SANGAT KECIL */
+            width: 24px;
+            height: 24px;
             background: radial-gradient(circle, #3b82f6 0%, #1d4ed8 80%);
             border-radius: 50%;
-            box-shadow: 
-                0 0 10px rgba(59, 130, 246, 0.7),
-                inset 0 1px 4px rgba(255,255,255,0.2),
-                0 1px 6px rgba(0,0,0,0.4);
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.7), inset 0 1px 3px rgba(255,255,255,0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1.5px solid rgba(255,255,255,0.3);
+            border: 1.2px solid rgba(255,255,255,0.3);
         }
         #gearValue {
-            font-size: 16px;   /* SANGAT KECIL */
+            font-size: 12px;
             font-weight: bold;
             color: #ffffff;
-            text-shadow: 0 0 5px rgba(255,255,255,0.7);
-            line-height: 1;
+            text-shadow: 0 0 4px rgba(255,255,255,0.7);
         }
 
-        /* 10 BAR RPM → HANYA PUTIH */
+        /* 10 BAR RPM */
         .rpm-bars {
             z-index: 4;
             overflow: visible;
         }
         .rpm-bar {
             fill: none;
-            stroke-width: 14;
+            stroke-width: 10;
             stroke-linecap: round;
             stroke: transparent;
             transition: stroke 0.3s ease, filter 0.3s ease;
         }
         .rpm-bar.active {
             stroke: #ffffff;
-            filter: drop-shadow(0 0 12px #ffffff);
+            filter: drop-shadow(0 0 9px #ffffff);
         }
 
         /* Scale */
         .scale-marks { position: absolute; width: 100%; height: 100%; }
         .scale-mark {
-            position: absolute; width: 2px; height: 12px; background: #475569;
-            left: 50%; top: 15px; transform-origin: 50% 145px;
+            position: absolute; width: 1.5px; height: 9px; background: #475569;
+            left: 50%; top: 11px; transform-origin: 50% 109px;
         }
-        .scale-mark.major { height: 18px; width: 3px; background: #64748b; }
+        .scale-mark.major { height: 14px; width: 2.5px; background: #64748b; }
         .scale-number {
-            position: absolute; color: #94a3b8; font-size: 14px;
+            position: absolute; color: #94a3b8; font-size: 10px;
             font-weight: 600; transform: translate(-50%, -50%);
         }
 
-        .speed-display { 
-            text-align: center; 
-            position: relative; 
+        .speed-display {
+            text-align: center;
             z-index: 2;
-            margin-top: 16px; /* Jarak dari gear ke KMH */
+            margin-top: 12px;
         }
         .speed-value {
-            font-size: 80px; 
-            font-weight: bold; 
+            font-size: 60px;
+            font-weight: bold;
             color: white;
-            text-shadow: 0 0 20px rgba(255,255,255,0.5);
-            line-height: 1; 
-            margin-bottom: 5px;
+            text-shadow: 0 0 15px rgba(255,255,255,0.5);
+            line-height: 1;
+            margin-bottom: 4px;
         }
-        .speed-unit { 
-            font-size: 16px; 
-            color: #94a3b8; 
-            letter-spacing: 2px; 
-            font-weight: 600; 
-        }
-        
-        .odometer {
-            position: absolute; 
-            bottom: 70px; 
-            background: rgba(0,0,0,0.4);
-            padding: 6px 14px; 
-            border-radius: 20px; 
-            font-size: 13px; 
+        .speed-unit {
+            font-size: 12px;
             color: #94a3b8;
+            letter-spacing: 1.5px;
+            font-weight: 600;
         }
 
-        /* Fuel & Health */
+        /* RPM & ODOMETER */
+        .odometer {
+            position: absolute;
+            bottom: 52px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.4);
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 10px;
+            color: #94a3b8;
+            z-index: 2;
+            white-space: nowrap;
+        }
+
+        /* ICON KECIL DI BAWAH */
+        .bottom-icons {
+            position: absolute;
+            bottom: 34px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 9px;
+            justify-content: center;
+            font-size: 11px;
+            z-index: 2;
+        }
+        .indicator-icon {
+            opacity: 0.2;
+            transition: opacity 0.3s, color 0.3s;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));
+        }
+        .indicator-icon.on { opacity: 1; }
+        .engine-status-icon.on { color: #34d399; }
+        .seatbelt-icon.on { opacity: 0.2; }
+        .seatbelt-icon.off { color: #ef4444; opacity: 1; }
+        .headlights-icon.on { color: #fde047; }
+        .headlights-icon.high-beam { color: #fde047; text-shadow: 0 0 8px #fde047; }
+        .left-indicator, .right-indicator { color: #f59e0b; }
+        @keyframes blink { 50% { opacity: 0.4; } }
+        .blinking { animation: blink 1s step-end infinite; }
+
+        /* Fuel & Health Gauges */
         .side-gauges { z-index: 3; }
         .arc-gauge {
-            position: absolute; width: 320px; height: 320px; top: 0; left: -35px;
+            position: absolute; width: 240px; height: 240px; top: 0; left: -26px;
         }
-        #engineGauge { left: auto; right: -35px; }
-        .arc-gauge path { fill: none; stroke-width: 16; stroke-linecap: round; }
+        #engineGauge { left: auto; right: -26px; }
+        .arc-gauge path { fill: none; stroke-width: 12; stroke-linecap: round; }
         .arc-gauge .arc-track { stroke: #374151; }
         .arc-gauge .arc-progress { transition: stroke-dashoffset 0.3s ease-out, stroke 0.3s ease; }
         .arc-progress.white { stroke: #e2e8f0; }
@@ -150,81 +180,79 @@
         @keyframes warning-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
         .top-icons {
-            position: absolute; top: 15px; width: 100%; display: flex;
-            justify-content: space-between; padding: 0 20px; font-size: 28px;
-        }
-        .bottom-icons {
-            position: absolute; bottom: 95px; display: flex; gap: 12px; font-size: 20px;
-        }
-        .indicator-icon {
-            opacity: 0.2; transition: opacity 0.3s, color 0.3s;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+            position: absolute; top: 11px; width: 100%; display: flex;
+            justify-content: space-between; padding: 0 15px; font-size: 21px;
         }
         .top-icons .indicator-icon { opacity: 1; }
-        .indicator-icon.on { opacity: 1; }
-        .engine-status-icon.on { color: #34d399; }
-        .seatbelt-icon.on { opacity: 0.2; }
-        .seatbelt-icon.off { color: #ef4444; opacity: 1; }
-        .headlights-icon.on { color: #fde047; }
-        .headlights-icon.high-beam { color: #fde047; text-shadow: 0 0 15px #fde047; }
-        .left-indicator, .right-indicator { color: #f59e0b; }
-        @keyframes blink { 50% { opacity: 1; } }
-        .blinking { animation: blink 1s step-end infinite; }
     </style>
 </head>
 <body>
     <div class="widget-wrapper">
-
         <!-- Speedometer -->
         <div class="speedometer">
             <div class="scale-marks" id="scaleMarks"></div>
-            
-            <!-- GEAR BULATAN BIRU KECIL & ATAS -->
+
+            <!-- GEAR KECIL ATAS -->
             <div class="gear-container">
                 <div class="gear-circle">
                     <div class="gear-display" id="gearValue">N</div>
                 </div>
             </div>
-            
+
             <div class="speed-display">
                 <div class="speed-value" id="speedValue">0</div>
                 <div class="speed-unit" id="speedUnit">KMH</div>
             </div>
-            
+
+            <!-- RPM DI BAWAH -->
             <div class="odometer" id="rpmDisplay">0.0000 RPM</div>
-            
+
+            <!-- ICON KECIL -->
             <div class="bottom-icons">
+                <div class="indicator-icon seatbelt-icon" id="seatbeltIcon">Prohibited</div>
+                <div class="indicator-icon headlights-icon" id="headlightsIcon">Bulb</div>
+                <div class="indicator-icon left-indicator" id="leftIndicator">Left</div>
+                <div class="indicator-icon right-indicator" id="rightIndicator">Right</div>
+            </div>
+
+            <!-- Engine Status -->
+            <div style="position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); font-size: 11px; z-index: 2;">
                 <div class="indicator-icon engine-status-icon" id="engineStatusIcon">Fire</div>
-                <div class="indicator-icon seatbelt-icon" id="seatbeltIcon">No Entry</div>
-                <div class="indicator-icon headlights-icon" id="headlightsIcon">Light Bulb</div>
-                <div class="indicator-icon left-indicator" id="leftIndicator">Left Arrow</div>
-                <div class="indicator-icon right-indicator" id="rightIndicator">Right Arrow</div>
             </div>
         </div>
 
         <!-- Fuel & Health -->
         <div class="side-gauges">
-            <svg class="arc-gauge" id="fuelGauge" viewBox="0 0 320 320">
-                <path class="arc-track" d="M 55,275 A 165,165 0 0 1 55,45"/>
-                <path class="arc-progress white" id="fuelProgress" d="M 55,275 A 165,165 0 0 1 55,45"/>
+            <!-- Fuel: Kiri, dari bawah ke atas -->
+            <svg class="arc-gauge" id="fuelGauge" viewBox="0 0 240 240">
+                <path class="arc-track" d="M 41,206 A 124,124 0 0 1 41,34"/>
+                <path class="arc-progress white" id="fuelProgress" d="M 41,206 A 124,124 0 0 1 41,34"/>
             </svg>
-            <svg class="arc-gauge" id="engineGauge" viewBox="0 0 320 320">
-                <path class="arc-track" d="M 265,45 A 165,165 0 0 1 265,275"/>
-                <path class="arc-progress white" id="engineProgress" d="M 265,45 A 165,165 0 0 1 265,275"/>
+
+            <!-- Health: Kanan, dari BAWAH ke atas (sweep-flag = 1) -->
+            <svg class="arc-gauge" id="engineGauge" viewBox="0 0 240 240">
+                <path class="arc-track" d="M 199,34 A 124,124 0 0 1 199,206"/>
+                <path class="arc-progress white" id="engineProgress" d="M 199,34 A 124,124 0 0 1 199,206"/>
             </svg>
+
             <div class="top-icons">
-                <div class="indicator-icon" id="fuelIcon">Fuel</div>
-                <div class="indicator-icon" id="healthIcon">Wrench</div>
+                <div class="indicator-icon" id="fuelIcon">Gas</div>
+                <div class="indicator-icon" id="healthIcon">Tool</div>
             </div>
         </div>
 
-        <!-- 10 BAR PUTIH -->
-        <svg class="rpm-bars" viewBox="0 0 320 320" id="rpmBars"></svg>
-
+        <!-- 10 BAR RPM -->
+        <svg class="rpm-bars" viewBox="0 0 240 240" id="rpmBars"></svg>
     </div>
 
     <script>
         let elements = {};
+        const SCALE = 0.75; // Sesuai transform scale di CSS
+        const SIZE = 240;
+        const CENTER = SIZE / 2;
+        const RPM_RADIUS = 114;
+        const SCALE_MARK_RADIUS = 109;
+        const NUMBER_RADIUS = 84;
 
         function initializeUI() {
             elements = {
@@ -233,7 +261,12 @@
                 gearValue: document.getElementById('gearValue'),
                 fuelProgress: document.getElementById('fuelProgress'),
                 engineProgress: document.getElementById('engineProgress'),
-                rpmBars: document.getElementById('rpmBars')
+                rpmBars: document.getElementById('rpmBars'),
+                seatbeltIcon: document.getElementById('seatbeltIcon'),
+                headlightsIcon: document.getElementById('headlightsIcon'),
+                leftIndicator: document.getElementById('leftIndicator'),
+                rightIndicator: document.getElementById('rightIndicator'),
+                engineStatusIcon: document.getElementById('engineStatusIcon')
             };
 
             elements.fuelArcLength = elements.fuelProgress.getTotalLength();
@@ -247,8 +280,6 @@
 
         function generateRPMBars() {
             const svg = elements.rpmBars;
-            const centerX = 160, centerY = 160;
-            const radius = 152;
             const startAngle = -135;
             const sweepAngle = 270;
             const segmentCount = 10;
@@ -259,13 +290,12 @@
                 const angle2 = startAngle + (i + 1) * anglePerSegment;
                 const rad1 = (angle1 - 90) * Math.PI / 180;
                 const rad2 = (angle2 - 90) * Math.PI / 180;
+                const x1 = CENTER + RPM_RADIUS * Math.cos(rad1);
+                const y1 = CENTER + RPM_RADIUS * Math.sin(rad1);
+                const x2 = CENTER + RPM_RADIUS * Math.cos(rad2);
+                const y2 = CENTER + RPM_RADIUS * Math.sin(rad2);
+                const pathData = `M ${x1} ${y1} A ${RPM_RADIUS} ${RPM_RADIUS} 0 0 1 ${x2} ${y2}`;
 
-                const x1 = centerX + radius * Math.cos(rad1);
-                const y1 = centerY + radius * Math.sin(rad1);
-                const x2 = centerX + radius * Math.cos(rad2);
-                const y2 = centerY + radius * Math.sin(rad2);
-
-                const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`;
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', pathData);
                 path.setAttribute('class', 'rpm-bar');
@@ -276,8 +306,7 @@
 
         function generateScaleMarks() {
             const scaleMarks = document.getElementById('scaleMarks');
-            const totalMarks = 10, startAngle = -135, sweepAngle = 270, numberRadius = 112;
-            const centerX = 160, centerY = 160;
+            const totalMarks = 10, startAngle = -135, sweepAngle = 270;
 
             for (let i = 0; i < totalMarks; i++) {
                 const angleDeg = startAngle + (i * sweepAngle / (totalMarks - 1));
@@ -290,8 +319,8 @@
                 number.className = 'scale-number';
                 number.textContent = i + 1;
                 const angleRad = (angleDeg - 90) * Math.PI / 180;
-                const x = centerX + numberRadius * Math.cos(angleRad);
-                const y = centerY + numberRadius * Math.sin(angleRad);
+                const x = CENTER + NUMBER_RADIUS * Math.cos(angleRad);
+                const y = CENTER + NUMBER_RADIUS * Math.sin(angleRad);
                 number.style.left = `${x}px`;
                 number.style.top = `${y}px`;
                 scaleMarks.appendChild(number);
@@ -329,15 +358,49 @@
             elements.gearValue.innerText = gear === 0 ? 'N' : gear;
         }
 
+        function setSeatbelt(on) {
+            elements.seatbeltIcon.classList.toggle('on', on);
+            elements.seatbeltIcon.classList.toggle('off', !on);
+        }
+
+        function setHeadlights(on, highBeam = false) {
+            elements.headlightsIcon.classList.toggle('on', on);
+            elements.headlightsIcon.classList.toggle('high-beam', highBeam);
+        }
+
+        function setLeftIndicator(on) {
+            elements.leftIndicator.classList.toggle('on', on);
+            if (on) elements.leftIndicator.classList.add('blinking');
+            else elements.leftIndicator.classList.remove('blinking');
+        }
+
+        function setRightIndicator(on) {
+            elements.rightIndicator.classList.toggle('on', on);
+            if (on) elements.rightIndicator.classList.add('blinking');
+            else elements.rightIndicator.classList.remove('blinking');
+        }
+
+        function setEngineStatus(on) {
+            elements.engineStatusIcon.classList.toggle('on', on);
+        }
+
         document.addEventListener('DOMContentLoaded', initializeUI);
 
-        // TESTING
+        // DEMO ANIMASI
         let testRPM = 0, testGear = 0;
         setInterval(() => {
             testRPM = (testRPM + 0.01) % 1.1;
             setRPM(testRPM > 1 ? 1 : testRPM);
             testGear = (testGear + 1) % 7;
             setGear(testGear);
+            setFuel(Math.random());
+            setHealth(Math.random());
+            setSeatbelt(Math.random() > 0.7);
+            setHeadlights(Math.random() > 0.5, Math.random() > 0.8);
+            setLeftIndicator(Math.random() > 0.8);
+            setRightIndicator(Math.random() > 0.8);
+            setEngineStatus(Math.random() > 0.3);
+            setSpeed(Math.random() * 50);
         }, 800);
     </script>
 </body>

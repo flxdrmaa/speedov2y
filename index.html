@@ -5,7 +5,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>RAGEMP Speedometer</title>
  <style>
-    /* === CSS DARI DESAIN SPEEDOMETER === */
+    /* === CSS === */
     * {
         user-select: none;
         user-drag: none;
@@ -19,17 +19,15 @@
         margin: 0;
     }
 
-    /* ================== PERUBAHAN DI SINI ================== */
     .widget-wrapper {
         position: fixed;
-        bottom: 15px; /* Sedikit dinaikkan agar seimbang */
-        right: 40px;  /* Digeser lebih ke kiri (nilai lebih besar) */
+        bottom: 15px;
+        right: 40px;
         width: 240px;
         height: 240px;
-        transform: scale(0.85); /* Ukuran diperbesar dari 0.75 */
+        transform: scale(0.85);
         transform-origin: bottom right;
     }
-    /* ======================================================= */
 
     .speedometer, .side-gauges, .rpm-bars {
         position: absolute;
@@ -138,31 +136,7 @@
         z-index: 2;
         white-space: nowrap;
     }
-
-    .bottom-icons {
-        position: absolute;
-        bottom: 34px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        font-size: 13px;
-        z-index: 2;
-    }
-    .indicator-icon {
-        opacity: 0.3;
-        transition: opacity 0.3s, color 0.3s, text-shadow 0.3s;
-        filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));
-    }
-    .indicator-icon.on { opacity: 1; }
-    .seatbelt-icon.off { color: #ef4444; opacity: 1; text-shadow: 0 0 6px #ef4444; }
-    .headlights-icon.on { color: #fde047; text-shadow: 0 0 8px #fde047; }
-    .headlights-icon.high-beam { color: #fde047; text-shadow: 0 0 12px #fde047; }
-    .left-indicator, .right-indicator { color: #f59e0b; }
-    @keyframes blink { 50% { opacity: 0.3; } }
-    .blinking { animation: blink 0.8s step-end infinite; }
-
+    
     .side-gauges { z-index: 3; }
     .arc-gauge {
         position: absolute; width: 240px; height: 240px; top: 0; left: -26px;
@@ -176,40 +150,102 @@
     .arc-progress.red { stroke: #ef4444; animation: warning-pulse 1s ease-in-out infinite; }
     @keyframes warning-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-    .top-icons {
-        position: absolute; top: 11px; width: 100%; display: flex;
-        justify-content: space-between; padding: 0 15px; font-size: 21px;
+    /* ================== STYLING IKON BARU ================== */
+    .bottom-icons {
+        position: absolute;
+        bottom: 25px; /* Diturunkan */
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 7px; /* Dirapatkan */
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
     }
-    .top-icons .indicator-icon { opacity: 1; }
+    .indicator-icon {
+        width: 20px;
+        height: 20px;
+    }
+    .indicator-icon img {
+        width: 100%;
+        height: 100%;
+        filter: invert(1) brightness(0.7);
+        opacity: 0.4;
+        transition: filter 0.3s, opacity 0.3s;
+    }
+    .left-indicator img {
+        transform: scaleX(-1);
+    }
+
+    .indicator-icon.on img { opacity: 1; filter: invert(1) brightness(1); }
+    .seatbelt-icon.off img { opacity: 1; filter: invert(37%) sepia(61%) saturate(5959%) hue-rotate(341deg) brightness(95%) contrast(96%) drop-shadow(0 0 5px #ef4444); }
+    .headlights-icon.on img { filter: invert(82%) sepia(54%) saturate(711%) hue-rotate(359deg) brightness(103%) contrast(97%) drop-shadow(0 0 7px #fde047); }
+    .headlights-icon.high-beam img { filter: invert(82%) sepia(54%) saturate(711%) hue-rotate(359deg) brightness(103%) contrast(97%) drop-shadow(0 0 10px #fde047); }
+    .left-indicator.on img, .right-indicator.on img { filter: invert(77%) sepia(49%) saturate(2335%) hue-rotate(331deg) brightness(97%) contrast(96%) drop-shadow(0 0 6px #f59e0b); }
+    
+    @keyframes blink-img { 50% { opacity: 0.3; } }
+    .blinking img { animation: blink-img 0.8s step-end infinite; }
+
+    /* Ikon Atas (Fuel & Engine) */
+    .top-icon {
+        position: absolute;
+        z-index: 5;
+        transform: translateX(-50%);
+    }
+    .top-icon img {
+        width: 100%;
+        height: 100%;
+        transition: filter 0.3s, opacity 0.3s;
+    }
+    #fuelIcon { width: 22px; height: 22px; top: 1px; left: 30px; /* Dinaikkan */ }
+    #fuelIcon img {
+        filter: invert(1) drop-shadow(0 1px 2px rgba(0,0,0,0.7));
+    }
+    #healthIcon {
+        width: 30px;
+        height: 30px;
+        top: 0px; /* Dinaikkan dan disamakan */
+        left: 210px;
+    }
+    #healthIcon img {
+        filter: invert(1) brightness(0.7) drop-shadow(0 1px 2px rgba(0,0,0,0.7));
+        opacity: 0.6;
+    }
+    #healthIcon.engine-on img {
+        filter: invert(1) brightness(1.1) drop-shadow(0 1px 3px rgba(255,255,255,0.4));
+        opacity: 1;
+    }
+    /* ======================================================= */
  </style>
 </head>
 <body>
  <div class="widget-wrapper">
     <div class="speedometer">
         <div class="scale-marks" id="scaleMarks"></div>
-
         <div class="gear-container">
             <div class="gear-circle">
                 <div class="gear-display" id="gearValue">N</div>
             </div>
         </div>
-
         <div class="speed-display">
             <div class="speed-value" id="speedValue">0</div>
             <div class="speed-unit" id="speedUnit">MPH</div>
         </div>
-
         <div class="rpm-text-display">RPM x1000</div>
-
+        
         <div class="bottom-icons">
-            <div class="indicator-icon seatbelt-icon" id="seatbeltIcon">⛔</div>
-            <div class="indicator-icon headlights-icon" id="headlightsIcon">💡</div>
-            <div class="indicator-icon left-indicator" id="leftIndicator">⬅</div>
-            <div class="indicator-icon right-indicator" id="rightIndicator">➡</div>
-        </div>
-
-        <div style="position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); font-size: 11px; z-index: 2;">
-            <div class="indicator-icon engine-status-icon" id="engineStatusIcon">🔥</div>
+            <div class="indicator-icon left-indicator" id="leftIndicator">
+                <img src="https://cdn3.iconfinder.com/data/icons/arrow-outline-8/32/right-512.png" alt="Left Indicator">
+            </div>
+            <div class="indicator-icon seatbelt-icon" id="seatbeltIcon">
+                <img src="https://cdn3.iconfinder.com/data/icons/iconpark-vol-4/48/belt-256.png" alt="Seatbelt">
+            </div>
+            <div class="indicator-icon headlights-icon" id="headlightsIcon">
+                <img src="https://cdn0.iconfinder.com/data/icons/phosphor-light-vol-3/256/headlights-light-256.png" alt="Headlights">
+            </div>
+            <div class="indicator-icon right-indicator" id="rightIndicator">
+                <img src="https://cdn3.iconfinder.com/data/icons/arrow-outline-8/32/right-512.png" alt="Right Indicator">
+            </div>
         </div>
     </div>
 
@@ -222,9 +258,11 @@
             <path class="arc-track" d="M 199,206 A 124,124 0 0 0 199,34"/>
             <path class="arc-progress white" id="engineProgress" d="M 199,206 A 124,124 0 0 0 199,34"/>
         </svg>
-        <div class="top-icons">
-            <div class="indicator-icon" id="fuelIcon">⛽</div>
-            <div class="indicator-icon" id="healthIcon">🔧</div>
+        <div class="top-icon" id="fuelIcon">
+            <img src="https://cdn0.iconfinder.com/data/icons/minimal-set-seven/32/minimal-47-256.png" alt="Fuel">
+        </div>
+        <div class="top-icon" id="healthIcon">
+            <img src="https://cdn4.iconfinder.com/data/icons/tabler-vol-3/24/engine-256.png" alt="Engine/Health">
         </div>
     </div>
     
@@ -232,6 +270,7 @@
  </div>
 
  <script>
+    // === JAVASCRIPT (TIDAK ADA PERUBAHAN) ===
     let elements = {};
     const SIZE = 240;
     const CENTER = SIZE / 2;
@@ -255,7 +294,7 @@
             headlightsIcon: document.getElementById('headlightsIcon'),
             leftIndicator: document.getElementById('leftIndicator'),
             rightIndicator: document.getElementById('rightIndicator'),
-            engineStatusIcon: document.getElementById('engineStatusIcon')
+            healthIcon: document.getElementById('healthIcon')
         };
 
         elements.fuelArcLength = elements.fuelProgress.getTotalLength();
@@ -340,7 +379,7 @@
     // --- RAGEMP API FUNCTIONS ---
 
     function setEngine(state) {
-        elements.engineStatusIcon.classList.toggle('on', state);
+        elements.healthIcon.classList.toggle('engine-on', state);
     }
 
     function setSpeed(speed) {

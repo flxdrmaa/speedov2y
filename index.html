@@ -3,419 +3,424 @@
 <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>RAGEMP Speedometer (Solid RPM - Corrected)</title>
+ <title>RAGEMP Speedometer</title>
  <style>
- * {
-  user-select: none;
-  user-drag: none;
-  box-sizing: border-box;
- }
+    /* === CSS DARI DESAIN SPEEDOMETER === */
+    * {
+        user-select: none;
+        user-drag: none;
+        box-sizing: border-box;
+    }
 
- body {
-  background-color: transparent !important;
-  font-family: 'Arial', sans-serif;
-  overflow: hidden;
-  margin: 0;
- }
+    body {
+        background-color: transparent !important;
+        font-family: 'Arial', sans-serif;
+        overflow: hidden;
+        margin: 0;
+    }
 
- .widget-wrapper {
-  position: fixed;
-  bottom: 12px;
-  right: 12px;
-  width: 240px;
-  height: 240px;
-  transform: scale(0.75) translateX(-20px);
-  transform-origin: bottom right;
- }
+    .widget-wrapper {
+        position: fixed;
+        bottom: 12px;
+        right: 12px;
+        width: 240px;
+        height: 240px;
+        transform: scale(0.75) translateX(-20px);
+        transform-origin: bottom right;
+    }
 
- .speedometer, .side-gauges, .rpm-bars {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
- }
+    .speedometer, .side-gauges, .rpm-bars {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
 
- /* Speedometer Background */
- .speedometer {
-  background: radial-gradient(circle, #1e3a5f 0%, #0a1929 100%);
-  border-radius: 50%;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.7), inset 0 0 30px rgba(0,0,0,0.5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
- }
+    .speedometer {
+        background: radial-gradient(circle, #1e3a5f 0%, #0a1929 100%);
+        border-radius: 50%;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.7), inset 0 0 30px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
 
- /* GEAR KECIL ATAS */
- .gear-container {
-  position: absolute;
-  top: 52px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
- }
- .gear-circle {
-  width: 24px;
-  height: 24px;
-  background: radial-gradient(circle, #3b82f6 0%, #1d4ed8 80%);
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.7), inset 0 1px 3px rgba(255,255,255,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.2px solid rgba(255,255,255,0.3);
- }
- #gearValue {
-  font-size: 12px;
-  font-weight: bold;
-  color: #ffffff;
-  text-shadow: 0 0 4px rgba(255,255,255,0.7);
- }
+    .gear-container {
+        position: absolute;
+        top: 52px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+    }
+    .gear-circle {
+        width: 24px;
+        height: 24px;
+        background: radial-gradient(circle, #3b82f6 0%, #1d4ed8 80%);
+        border-radius: 50%;
+        box-shadow: 0 0 8px rgba(59, 130, 246, 0.7), inset 0 1px 3px rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.2px solid rgba(255,255,255,0.3);
+    }
+    #gearValue {
+        font-size: 12px;
+        font-weight: bold;
+        color: #ffffff;
+        text-shadow: 0 0 4px rgba(255,255,255,0.7);
+    }
 
- /* RPM SOLID LINE */
- .rpm-bars {
-  z-index: 4;
-  overflow: visible;
- }
- .rpm-track {
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.1); /* Jalur redup di belakang */
-    stroke-width: 10;
-    stroke-linecap: round;
- }
- .rpm-progress {
-    fill: none;
-    stroke: #ffffff; /* Warna Putih RPM */
-    stroke-width: 10;
-    stroke-linecap: round;
-    filter: drop-shadow(0 0 8px #ffffff); /* Efek Glow */
-    transition: stroke-dashoffset 0.1s linear; /* Gerakan mulus */
- }
+    .rpm-bars {
+        z-index: 4;
+        overflow: visible;
+    }
+    .rpm-track {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.1);
+        stroke-width: 10;
+        stroke-linecap: round;
+    }
+    .rpm-progress {
+        fill: none;
+        stroke: #ffffff;
+        stroke-width: 10;
+        stroke-linecap: round;
+        filter: drop-shadow(0 0 8px #ffffff);
+        transition: stroke-dashoffset 0.1s linear;
+    }
 
- /* Scale Marks (Garis Angka Tetap Ada) */
- .scale-marks { position: absolute; width: 100%; height: 100%; pointer-events: none; }
- .scale-mark {
-  position: absolute; width: 1.5px; height: 9px; background: #475569;
-  left: 50%; top: 11px; transform-origin: 50% 109px;
- }
- .scale-mark.major { height: 14px; width: 2.5px; background: #64748b; }
- .scale-number {
-  position: absolute; color: #94a3b8; font-size: 10px;
-  font-weight: 600; transform: translate(-50%, -50%);
- }
+    .scale-marks { position: absolute; width: 100%; height: 100%; pointer-events: none; }
+    .scale-mark {
+        position: absolute; width: 1.5px; height: 9px; background: #475569;
+        left: 50%; top: 11px; transform-origin: 50% 109px;
+    }
+    .scale-mark.major { height: 14px; width: 2.5px; background: #64748b; }
+    .scale-number {
+        position: absolute; color: #94a3b8; font-size: 10px;
+        font-weight: 600; transform: translate(-50%, -50%);
+    }
 
- .speed-display {
-  text-align: center;
-  z-index: 2;
-  margin-top: 12px;
- }
- .speed-value {
-  font-size: 60px;
-  font-weight: bold;
-  color: white;
-  text-shadow: 0 0 15px rgba(255,255,255,0.5);
-  line-height: 1;
-  margin-bottom: 4px;
- }
- .speed-unit {
-  font-size: 12px;
-  color: #94a3b8;
-  letter-spacing: 1.5px;
-  font-weight: 600;
- }
+    .speed-display {
+        text-align: center;
+        z-index: 2;
+        margin-top: 12px;
+    }
+    .speed-value {
+        font-size: 60px;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 0 15px rgba(255,255,255,0.5);
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+    .speed-unit {
+        font-size: 12px;
+        color: #94a3b8;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+    }
 
- /* RPM TEXT STATIC */
- .rpm-text-display {
-  position: absolute;
-  bottom: 52px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.4);
-  padding: 4px 10px;
-  border-radius: 16px;
-  font-size: 10px;
-  color: #94a3b8;
-  z-index: 2;
-  white-space: nowrap;
- }
+    .rpm-text-display {
+        position: absolute;
+        bottom: 52px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.4);
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 10px;
+        color: #94a3b8;
+        z-index: 2;
+        white-space: nowrap;
+    }
 
- /* ICON SET */
- .bottom-icons {
-  position: absolute;
-  bottom: 34px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  font-size: 13px;
-  z-index: 2;
- }
- .indicator-icon {
-  opacity: 0.3;
-  transition: opacity 0.3s, color 0.3s, text-shadow 0.3s;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));
- }
- .indicator-icon.on { opacity: 1; }
- .seatbelt-icon.off { color: #ef4444; opacity: 1; text-shadow: 0 0 6px #ef4444; }
- .headlights-icon.on { color: #fde047; text-shadow: 0 0 8px #fde047; }
- .headlights-icon.high-beam { color: #fde047; text-shadow: 0 0 12px #fde047; }
- .left-indicator, .right-indicator { color: #f59e0b; }
- @keyframes blink { 50% { opacity: 0.3; } }
- .blinking { animation: blink 0.8s step-end infinite; }
+    .bottom-icons {
+        position: absolute;
+        bottom: 34px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        font-size: 13px;
+        z-index: 2;
+    }
+    .indicator-icon {
+        opacity: 0.3;
+        transition: opacity 0.3s, color 0.3s, text-shadow 0.3s;
+        filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));
+    }
+    .indicator-icon.on { opacity: 1; }
+    .seatbelt-icon.off { color: #ef4444; opacity: 1; text-shadow: 0 0 6px #ef4444; }
+    .headlights-icon.on { color: #fde047; text-shadow: 0 0 8px #fde047; }
+    .headlights-icon.high-beam { color: #fde047; text-shadow: 0 0 12px #fde047; }
+    .left-indicator, .right-indicator { color: #f59e0b; }
+    @keyframes blink { 50% { opacity: 0.3; } }
+    .blinking { animation: blink 0.8s step-end infinite; }
 
- /* Side Gauges */
- .side-gauges { z-index: 3; }
- .arc-gauge {
-  position: absolute; width: 240px; height: 240px; top: 0; left: -26px;
- }
- #engineGauge { left: auto; right: -26px; }
- .arc-gauge path { fill: none; stroke-width: 12; stroke-linecap: round; }
- .arc-gauge .arc-track { stroke: #374151; }
- .arc-gauge .arc-progress { transition: stroke-dashoffset 0.3s ease-out, stroke 0.3s ease; }
- .arc-progress.white { stroke: #e2e8f0; }
- .arc-progress.yellow { stroke: #fbbf24; }
- .arc-progress.red { stroke: #ef4444; animation: warning-pulse 1s ease-in-out infinite; }
- @keyframes warning-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .side-gauges { z-index: 3; }
+    .arc-gauge {
+        position: absolute; width: 240px; height: 240px; top: 0; left: -26px;
+    }
+    #engineGauge { left: auto; right: -26px; }
+    .arc-gauge path { fill: none; stroke-width: 12; stroke-linecap: round; }
+    .arc-gauge .arc-track { stroke: #374151; }
+    .arc-gauge .arc-progress { transition: stroke-dashoffset 0.3s ease-out, stroke 0.3s ease; }
+    .arc-progress.white { stroke: #e2e8f0; }
+    .arc-progress.yellow { stroke: #fbbf24; }
+    .arc-progress.red { stroke: #ef4444; animation: warning-pulse 1s ease-in-out infinite; }
+    @keyframes warning-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
- .top-icons {
-  position: absolute; top: 11px; width: 100%; display: flex;
-  justify-content: space-between; padding: 0 15px; font-size: 21px;
- }
- .top-icons .indicator-icon { opacity: 1; }
+    .top-icons {
+        position: absolute; top: 11px; width: 100%; display: flex;
+        justify-content: space-between; padding: 0 15px; font-size: 21px;
+    }
+    .top-icons .indicator-icon { opacity: 1; }
  </style>
 </head>
 <body>
  <div class="widget-wrapper">
-  <!-- Speedometer -->
-  <div class="speedometer">
-   <div class="scale-marks" id="scaleMarks"></div>
+    <div class="speedometer">
+        <div class="scale-marks" id="scaleMarks"></div>
 
-   <div class="gear-container">
-    <div class="gear-circle">
-     <div class="gear-display" id="gearValue">N</div>
+        <div class="gear-container">
+            <div class="gear-circle">
+                <div class="gear-display" id="gearValue">N</div>
+            </div>
+        </div>
+
+        <div class="speed-display">
+            <div class="speed-value" id="speedValue">0</div>
+            <div class="speed-unit" id="speedUnit">MPH</div>
+        </div>
+
+        <div class="rpm-text-display">RPM x1000</div>
+
+        <div class="bottom-icons">
+            <div class="indicator-icon seatbelt-icon" id="seatbeltIcon">⛔</div>
+            <div class="indicator-icon headlights-icon" id="headlightsIcon">💡</div>
+            <div class="indicator-icon left-indicator" id="leftIndicator">⬅</div>
+            <div class="indicator-icon right-indicator" id="rightIndicator">➡</div>
+        </div>
+
+        <div style="position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); font-size: 11px; z-index: 2;">
+            <div class="indicator-icon engine-status-icon" id="engineStatusIcon">🔥</div>
+        </div>
     </div>
-   </div>
 
-   <div class="speed-display">
-    <div class="speed-value" id="speedValue">0</div>
-    <div class="speed-unit" id="speedUnit">MPH</div>
-   </div>
-
-   <!-- Static RPM Text -->
-   <div class="rpm-text-display">RPM x1000</div>
-
-   <div class="bottom-icons">
-    <div class="indicator-icon seatbelt-icon" id="seatbeltIcon">⛔</div>
-    <div class="indicator-icon headlights-icon" id="headlightsIcon">💡</div>
-    <div class="indicator-icon left-indicator" id="leftIndicator">⬅</div>
-    <div class="indicator-icon right-indicator" id="rightIndicator">➡</div>
-   </div>
-
-   <div style="position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); font-size: 11px; z-index: 2;">
-    <div class="indicator-icon engine-status-icon" id="engineStatusIcon">🔥</div>
-   </div>
-  </div>
-
-  <!-- Fuel & Health -->
-  <div class="side-gauges">
-   <svg class="arc-gauge" id="fuelGauge" viewBox="0 0 240 240">
-    <path class="arc-track" d="M 41,206 A 124,124 0 0 1 41,34"/>
-    <path class="arc-progress white" id="fuelProgress" d="M 41,206 A 124,124 0 0 1 41,34"/>
-   </svg>
-   <svg class="arc-gauge" id="engineGauge" viewBox="0 0 240 240">
-    <path class="arc-track" d="M 199,206 A 124,124 0 0 0 199,34"/>
-    <path class="arc-progress white" id="engineProgress" d="M 199,206 A 124,124 0 0 0 199,34"/>
-   </svg>
-   <div class="top-icons">
-    <div class="indicator-icon" id="fuelIcon">⛽</div>
-    <div class="indicator-icon" id="healthIcon">🔧</div>
-   </div>
-  </div>
-
-  <!-- RPM BARS (Solid Line) -->
-  <svg class="rpm-bars" viewBox="0 0 240 240" id="rpmBars"></svg>
+    <div class="side-gauges">
+        <svg class="arc-gauge" id="fuelGauge" viewBox="0 0 240 240">
+            <path class="arc-track" d="M 41,206 A 124,124 0 0 1 41,34"/>
+            <path class="arc-progress white" id="fuelProgress" d="M 41,206 A 124,124 0 0 1 41,34"/>
+        </svg>
+        <svg class="arc-gauge" id="engineGauge" viewBox="0 0 240 240">
+            <path class="arc-track" d="M 199,206 A 124,124 0 0 0 199,34"/>
+            <path class="arc-progress white" id="engineProgress" d="M 199,206 A 124,124 0 0 0 199,34"/>
+        </svg>
+        <div class="top-icons">
+            <div class="indicator-icon" id="fuelIcon">⛽</div>
+            <div class="indicator-icon" id="healthIcon">🔧</div>
+        </div>
+    </div>
+    
+    <svg class="rpm-bars" viewBox="0 0 240 240" id="rpmBars"></svg>
  </div>
 
  <script>
-let elements = {};
-const SIZE = 240;
-const CENTER = SIZE / 2;
-const RPM_RADIUS = 114;
-const NUMBER_RADIUS = 84;
+    // === JAVASCRIPT GABUNGAN (LOGIKA VISUAL + API RAGEMP) ===
 
-let currentRPM = 0;
-let targetRPM = 0;
-const RPM_SMOOTHNESS = 0.12;
+    let elements = {};
+    const SIZE = 240;
+    const CENTER = SIZE / 2;
+    const RPM_RADIUS = 114;
+    const NUMBER_RADIUS = 84;
 
-function initializeUI() {
-    elements = {
-        speedValue: document.getElementById('speedValue'),
-        gearValue: document.getElementById('gearValue'),
-        fuelProgress: document.getElementById('fuelProgress'),
-        engineProgress: document.getElementById('engineProgress'),
-        rpmBars: document.getElementById('rpmBars'),
-        seatbeltIcon: document.getElementById('seatbeltIcon'),
-        headlightsIcon: document.getElementById('headlightsIcon'),
-        leftIndicator: document.getElementById('leftIndicator'),
-        rightIndicator: document.getElementById('rightIndicator'),
-        engineStatusIcon: document.getElementById('engineStatusIcon')
-    };
+    // State variables
+    let currentRPM = 0;
+    let targetRPM = 0;
+    const RPM_SMOOTHNESS = 0.12;
+    let speedMode = 1; // 0: KMH, 1: MPH, 2: Knots
 
-    // Setup Side Gauges
-    elements.fuelArcLength = elements.fuelProgress.getTotalLength();
-    elements.engineArcLength = elements.engineProgress.getTotalLength();
-    elements.fuelProgress.style.strokeDasharray = elements.fuelArcLength;
-    elements.engineProgress.style.strokeDasharray = elements.engineArcLength;
-
-    generateRPMBar();
-    generateScaleMarks();
-    requestAnimationFrame(updateRPMAnimation);
-}
-
-function generateRPMBar() {
-    const svg = elements.rpmBars;
-    const startAngle = -135;
-    const sweepAngle = 270;
-    const endAngle = startAngle + sweepAngle;
-
-    function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
-        const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
-        return {
-            x: centerX + (radius * Math.cos(angleInRadians)),
-            y: centerY + (radius * Math.sin(angleInRadians))
+    function initializeUI() {
+        elements = {
+            speedValue: document.getElementById('speedValue'),
+            speedUnit: document.getElementById('speedUnit'),
+            gearValue: document.getElementById('gearValue'),
+            fuelProgress: document.getElementById('fuelProgress'),
+            engineProgress: document.getElementById('engineProgress'),
+            rpmBars: document.getElementById('rpmBars'),
+            seatbeltIcon: document.getElementById('seatbeltIcon'),
+            headlightsIcon: document.getElementById('headlightsIcon'),
+            leftIndicator: document.getElementById('leftIndicator'),
+            rightIndicator: document.getElementById('rightIndicator'),
+            engineStatusIcon: document.getElementById('engineStatusIcon')
         };
+
+        elements.fuelArcLength = elements.fuelProgress.getTotalLength();
+        elements.engineArcLength = elements.engineProgress.getTotalLength();
+        elements.fuelProgress.style.strokeDasharray = elements.fuelArcLength;
+        elements.engineProgress.style.strokeDasharray = elements.engineArcLength;
+
+        generateRPMBar();
+        generateScaleMarks();
+        requestAnimationFrame(updateRPMAnimation);
     }
 
-    // ================== PERUBAHAN DI SINI ==================
-    function describeArc(x, y, radius, startAngle, endAngle) {
-        // Titik awal dan akhir digambar dari sudut awal ke sudut akhir
-        const start = polarToCartesian(x, y, radius, startAngle);
-        const end = polarToCartesian(x, y, radius, endAngle);
+    function generateRPMBar() {
+        const svg = elements.rpmBars;
+        const startAngle = -135, sweepAngle = 270, endAngle = startAngle + sweepAngle;
+
+        const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+            const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+            return {
+                x: centerX + (radius * Math.cos(angleInRadians)),
+                y: centerY + (radius * Math.sin(angleInRadians))
+            };
+        };
+
+        const describeArc = (x, y, radius, startAngle, endAngle) => {
+            const start = polarToCartesian(x, y, radius, startAngle);
+            const end = polarToCartesian(x, y, radius, endAngle);
+            const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+            return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`;
+        };
+
+        const pathData = describeArc(CENTER, CENTER, RPM_RADIUS, startAngle, endAngle);
+
+        const track = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        track.setAttribute('d', pathData);
+        track.setAttribute('class', 'rpm-track');
+        svg.appendChild(track);
+
+        const progress = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        progress.setAttribute('d', pathData);
+        progress.setAttribute('class', 'rpm-progress');
+        const length = progress.getTotalLength();
+        progress.style.strokeDasharray = length;
+        progress.style.strokeDashoffset = length;
         
-        const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-        // Sweep-flag diubah menjadi 1 agar menggambar searah jarum jam (arah positif)
-        const sweepFlag = 1;
-
-        return [
-            "M", start.x, start.y, 
-            "A", radius, radius, 0, largeArcFlag, sweepFlag, end.x, end.y
-        ].join(" ");
-    }
-    // =======================================================
-
-    const pathData = describeArc(CENTER, CENTER, RPM_RADIUS, startAngle, endAngle);
-
-    // 1. Track Background (Garis redup)
-    const track = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    track.setAttribute('d', pathData);
-    track.setAttribute('class', 'rpm-track');
-    svg.appendChild(track);
-
-    // 2. Progress Bar (Garis putih aktif)
-    const progress = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    progress.setAttribute('d', pathData);
-    progress.setAttribute('class', 'rpm-progress');
-    progress.setAttribute('id', 'rpmSolidBar');
-    
-    const length = progress.getTotalLength();
-    progress.style.strokeDasharray = length;
-    progress.style.strokeDashoffset = length; // Mulai kosong
-    
-    elements.rpmSolidBar = progress;
-    elements.rpmFullLength = length;
-
-    svg.appendChild(progress);
-}
-
-function generateScaleMarks() {
-    const scaleMarks = document.getElementById('scaleMarks');
-    const totalMarks = 10, startAngle = -135, sweepAngle = 270;
-
-    for (let i = 0; i < totalMarks; i++) {
-        const angleDeg = startAngle + (i * sweepAngle / (totalMarks - 1));
-        const mark = document.createElement('div');
-        mark.className = 'scale-mark major';
-        mark.style.transform = `translateX(-50%) rotate(${angleDeg}deg)`;
-        scaleMarks.appendChild(mark);
-
-        const number = document.createElement('div');
-        number.className = 'scale-number';
-        number.textContent = i + 1;
-        const angleRad = (angleDeg - 90) * Math.PI / 180;
-        const x = CENTER + NUMBER_RADIUS * Math.cos(angleRad);
-        const y = CENTER + NUMBER_RADIUS * Math.sin(angleRad);
-        number.style.left = `${x}px`;
-        number.style.top = `${y}px`;
-        scaleMarks.appendChild(number);
-    }
-}
-
-function updateRPMAnimation() {
-    currentRPM += (targetRPM - currentRPM) * RPM_SMOOTHNESS;
-    
-    if (elements.rpmSolidBar) {
-        const offset = elements.rpmFullLength * (1 - currentRPM);
-        elements.rpmSolidBar.style.strokeDashoffset = offset;
+        elements.rpmSolidBar = progress;
+        elements.rpmFullLength = length;
+        svg.appendChild(progress);
     }
 
-    requestAnimationFrame(updateRPMAnimation);
-}
+    function generateScaleMarks() {
+        const scaleMarks = document.getElementById('scaleMarks');
+        const totalMarks = 10, startAngle = -135, sweepAngle = 270;
 
-// API
-window.setRPM = (rpm) => targetRPM = Math.max(0, Math.min(1, rpm / 10000));
-window.setSpeed = (speed) => elements.speedValue.innerText = Math.round(speed * 2.23694);
-window.setFuel = (fuel) => {
-    const offset = elements.fuelArcLength * (1 - fuel);
-    elements.fuelProgress.style.strokeDashoffset = offset;
-    elements.fuelProgress.className = fuel < 0.2 ? 'arc-progress red' : fuel < 0.5 ? 'arc-progress yellow' : 'arc-progress white';
-};
-window.setHealth = (health) => {
-    const offset = elements.engineArcLength * (1 - health);
-    elements.engineProgress.style.strokeDashoffset = offset;
-    elements.engineProgress.className = health < 0.2 ? 'arc-progress red' : health < 0.5 ? 'arc-progress yellow' : 'arc-progress white';
-};
-window.setGear = (gear) => elements.gearValue.innerText = gear === 0 ? 'R' : gear === 1 ? 'N' : gear - 1;
-window.setSeatbelt = (on) => { 
-    elements.seatbeltIcon.classList.toggle('on', on); 
-    elements.seatbeltIcon.classList.toggle('off', !on); 
-};
-window.setHeadlights = (on, highBeam = false) => { 
-    elements.headlightsIcon.classList.toggle('on', on); 
-    elements.headlightsIcon.classList.toggle('high-beam', highBeam); 
-};
-window.setLeftIndicator = (on) => { 
-    elements.leftIndicator.classList.toggle('on', on); 
-    if (on) elements.leftIndicator.classList.add('blinking'); 
-    else elements.leftIndicator.classList.remove('blinking'); 
-};
-window.setRightIndicator = (on) => { 
-    elements.rightIndicator.classList.toggle('on', on); 
-    if (on) elements.rightIndicator.classList.add('blinking'); 
-    else elements.rightIndicator.classList.remove('blinking'); 
-};
-window.setEngineStatus = (on) => elements.engineStatusIcon.classList.toggle('on', on);
+        for (let i = 0; i < totalMarks; i++) {
+            const angleDeg = startAngle + (i * sweepAngle / (totalMarks - 1));
+            const mark = document.createElement('div');
+            mark.className = 'scale-mark major';
+            mark.style.transform = `translateX(-50%) rotate(${angleDeg}deg)`;
+            scaleMarks.appendChild(mark);
 
-document.addEventListener('DOMContentLoaded', initializeUI);
+            const number = document.createElement('div');
+            number.className = 'scale-number';
+            number.textContent = i + 1;
+            const angleRad = (angleDeg - 90) * Math.PI / 180;
+            const x = CENTER + NUMBER_RADIUS * Math.cos(angleRad);
+            const y = CENTER + NUMBER_RADIUS * Math.sin(angleRad);
+            number.style.left = `${x}px`;
+            number.style.top = `${y}px`;
+            scaleMarks.appendChild(number);
+        }
+    }
 
-// DEMO LOOP
-let t = 0;
-setInterval(() => {
-    t += 0.03;
-    const sin = Math.sin(t);
-    targetRPM = (sin * 0.5 + 0.5); 
-    window.setSpeed(Math.abs(sin) * 120);
-    window.setFuel(0.6 + sin * 0.3);
-    window.setHealth(0.8 + sin * 0.15);
-    window.setGear(Math.floor(Math.abs(sin) * 6) + 1);
-    window.setSeatbelt(t % 10 > 5);
-    window.setHeadlights(t % 15 > 7, t % 20 > 15);
-    window.setLeftIndicator(t % 25 > 22);
-    window.setRightIndicator(t % 18 > 16);
-    window.setEngineStatus(true);
-}, 80);
+    function updateRPMAnimation() {
+        currentRPM += (targetRPM - currentRPM) * RPM_SMOOTHNESS;
+        if (elements.rpmSolidBar) {
+            const offset = elements.rpmFullLength * (1 - currentRPM);
+            elements.rpmSolidBar.style.strokeDashoffset = offset;
+        }
+        requestAnimationFrame(updateRPMAnimation);
+    }
+
+    // --- RAGEMP API FUNCTIONS ---
+
+    function setEngine(state) {
+        elements.engineStatusIcon.classList.toggle('on', state);
+    }
+
+    function setSpeed(speed) {
+        let convertedSpeed = 0;
+        let unit = 'KMH';
+        switch(speedMode) {
+            case 1: // MPH
+                convertedSpeed = Math.round(speed * 2.236936);
+                unit = 'MPH';
+                break;
+            case 2: // Knots
+                convertedSpeed = Math.round(speed * 1.943844);
+                unit = 'Knots';
+                break;
+            default: // KMH
+                convertedSpeed = Math.round(speed * 3.6);
+                unit = 'KMH';
+        }
+        elements.speedValue.innerText = convertedSpeed;
+        elements.speedUnit.innerText = unit;
+    }
+
+    function setRPM(rpm) {
+        targetRPM = Math.max(0, Math.min(1, rpm));
+    }
+
+    function setFuel(fuel) {
+        const offset = elements.fuelArcLength * (1 - fuel);
+        elements.fuelProgress.style.strokeDashoffset = offset;
+        elements.fuelProgress.className = `arc-progress ${fuel < 0.2 ? 'red' : fuel < 0.5 ? 'yellow' : 'white'}`;
+    }
+
+    function setHealth(health) {
+        const offset = elements.engineArcLength * (1 - health);
+        elements.engineProgress.style.strokeDashoffset = offset;
+        elements.engineProgress.className = `arc-progress ${health < 0.2 ? 'red' : health < 0.5 ? 'yellow' : 'white'}`;
+    }
+
+    function setGear(gear) {
+        // RAGEMP Standard: 0=R, 1=N, 2=1st, 3=2nd ...
+        let displayGear;
+        if (gear === 0) {
+            displayGear = 'R';
+        } else if (gear === 1) {
+            displayGear = 'N';
+        } else {
+            displayGear = gear - 1;
+        }
+        elements.gearValue.innerText = displayGear;
+    }
+
+    function setHeadlights(state) {
+        const on = state > 0;
+        const highBeam = state === 2;
+        elements.headlightsIcon.classList.toggle('on', on);
+        elements.headlightsIcon.classList.toggle('high-beam', highBeam);
+    }
+
+    function setLeftIndicator(state) {
+        elements.leftIndicator.classList.toggle('on', state);
+        elements.leftIndicator.classList.toggle('blinking', state);
+    }
+
+    function setRightIndicator(state) {
+        elements.rightIndicator.classList.toggle('on', state);
+        elements.rightIndicator.classList.toggle('blinking', state);
+    }
+
+    function setSeatbelts(state) {
+        elements.seatbeltIcon.classList.toggle('on', state);
+        elements.seatbeltIcon.classList.toggle('off', !state);
+    }
+
+    function setSpeedMode(mode) {
+        speedMode = mode;
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeUI);
  </script>
 </body>
 </html>
